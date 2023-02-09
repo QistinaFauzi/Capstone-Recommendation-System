@@ -18,4 +18,5 @@ public class Movie {
     private String genres;
     private int tmdbid;
     private String poster;
+    private String description;
 }

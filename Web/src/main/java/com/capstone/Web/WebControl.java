@@ -53,7 +53,7 @@ public class WebControl {
         model.addAttribute("dataList", dataList);
         return "homepage";
     }
-    //Direct User to regitration page after clicking the register link
+    //Direct User to registration page after clicking the register link
     @GetMapping("/register")
     public String register()
     {
@@ -141,7 +141,20 @@ public class WebControl {
         return "adminpage";
     }
 
-    //List out all movies in databse for admin
+    //Allow admin to go to add new movie
+    @GetMapping("/addmoviepage")
+    public String addnewmovie(){
+        return "addmovie";
+    }
+
+    //Admin add new movie
+    @PostMapping("/addmovie")
+    public String addnewMovie(@ModelAttribute("movie") Movie movie){
+        HttpEntity<Movie> entity = new HttpEntity<Movie>(movie);
+        restTemplate.exchange("http://localhost:8083/addmovie", HttpMethod.POST, entity, Movie.class).getBody();
+        return "adminpage";
+    }
+    //List out all movies in database for admin
     @GetMapping("/viewallmovies")
     public String goviewmovies(Model model){
         HttpHeaders headers = new HttpHeaders();
@@ -198,7 +211,7 @@ public class WebControl {
     @GetMapping("/getrecommend")
     public String movieinfo(@RequestParam("movieid") int movieid, Model model){
 
-        //get the movie by movieid clicked and set in a dataList
+        //get the movie by movieid c licked and set in a dataList
         HttpHeaders headers = new HttpHeaders();
         HttpEntity<Movie> entity = new HttpEntity<Movie>(headers);
         Movie dataList = restTemplate.exchange("http://localhost:8083/findbyid/"+movieid, HttpMethod.GET, entity, Movie.class).getBody();
@@ -232,17 +245,32 @@ public class WebControl {
     //save rating
     @PostMapping("/addrating")
     public String addrate(@ModelAttribute("rating") Rating rating, Model model){
-        model.addAttribute("message", "Thank you for ratng");
-        return "recommendedpage";
+        int movieId = rating.getMovieid();//retrieve movie id
+        int userId = rating.getUserid();//retrieve user Id
+        int ratingId = rating.getRatingid();
+        double userrating = rating.getRating();//get rating
+        //enter all the detail into rating object
+        rating = new Rating(ratingId, movieId, userrating, userId);
+
+        HttpEntity<Rating> entity = new HttpEntity<Rating>(rating);
+        restTemplate.exchange("http://localhost:8085/addrating", HttpMethod.POST, entity, Rating.class).getBody();
+
+        //to retrieve the movies and set into a list using resttemplate
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+        HttpEntity<Movie> entitymovie = new HttpEntity<Movie>(headers);
+        List<Movie> movieList = restTemplate.exchange("http://localhost:8083/allmovies", HttpMethod.GET, entitymovie, new ParameterizedTypeReference<List<Movie>>() {}).getBody();
+
+        return "/home";
     }
 
     //FAVOURITE CONTROL
-    //save favourite
-    @PostMapping("/addfavorite")
-    public String addfav(@ModelAttribute("favourite") Favourite favourite, Model model){
+    //save favourite using userid, movieid
+    /*@PostMapping("/addfavorite")
+    public String addfav(@RequestParam("favid") int favid, @RequestParam("userid") int userid, @RequestParam("movieid") int movieid){
         model.addAttribute("message", "Added to Favourite");
         return "recommendedpage";
-    }
+    }*/
 
 }
 
