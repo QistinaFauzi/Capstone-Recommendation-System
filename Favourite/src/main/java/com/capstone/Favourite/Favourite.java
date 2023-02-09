@@ -18,4 +18,5 @@ public class Favourite {
     @GeneratedValue
     private int favid; //primary key
     private int movieid; //indicate favourite
+    private int userid;
 }
