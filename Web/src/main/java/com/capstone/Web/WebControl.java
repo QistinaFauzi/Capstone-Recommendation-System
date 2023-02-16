@@ -1,5 +1,6 @@
 package com.capstone.Web;
 
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -95,7 +96,7 @@ public class WebControl {
     //Allow registered user to login as Admin/User
     //Use redirect view because homepage show movies set at /home
     @PostMapping("/login")
-    public RedirectView login(@ModelAttribute("user") User user, Model model) {
+    public RedirectView login(@ModelAttribute("user") User user, Model model, HttpSession session) {
         String username = user.getUsername();
         String type = user.getType();
         HttpHeaders headers = new HttpHeaders();
@@ -113,8 +114,12 @@ public class WebControl {
                     model.addAttribute("message", "Welcome " + user.getUsername());
                     return new RedirectView("/backadmin");
                 }
-                else
+                else{
+                    //create a session for name and id
+                    session.setAttribute("username", user.getUsername());
+                    session.setAttribute("userid", userdata.get().getUserid());
                     return new RedirectView("/home");
+                }
             } else{
                 model.addAttribute("invalid", "Make sure password is correct");
                 return new RedirectView("/");
@@ -243,8 +248,8 @@ public class WebControl {
 
     //RATING CONTROL
     //save rating
-    @PostMapping("/addrating")
-    public String addrate(@ModelAttribute("rating") Rating rating, Model model){
+    @PostMapping("/addmovierating")
+    public RedirectView addrate(@ModelAttribute("rating") Rating rating, Model model){
         int movieId = rating.getMovieid();//retrieve movie id
         int userId = rating.getUserid();//retrieve user Id
         int ratingId = rating.getRatingid();
@@ -259,18 +264,77 @@ public class WebControl {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
         HttpEntity<Movie> entitymovie = new HttpEntity<Movie>(headers);
-        List<Movie> movieList = restTemplate.exchange("http://localhost:8083/allmovies", HttpMethod.GET, entitymovie, new ParameterizedTypeReference<List<Movie>>() {}).getBody();
-
-        return "/home";
+        List<Movie> dataList = restTemplate.exchange("http://localhost:8083/allmovies", HttpMethod.GET, entitymovie, new ParameterizedTypeReference<List<Movie>>() {}).getBody();
+        model.addAttribute("datalist", dataList);
+        return new RedirectView("/home");
     }
 
     //FAVOURITE CONTROL
     //save favourite using userid, movieid
-    /*@PostMapping("/addfavorite")
-    public String addfav(@RequestParam("favid") int favid, @RequestParam("userid") int userid, @RequestParam("movieid") int movieid){
-        model.addAttribute("message", "Added to Favourite");
-        return "recommendedpage";
-    }*/
+    @PostMapping("/addfavourite")
+    public String addfav(@RequestParam("userid") int userid, @RequestParam("movieid") int movieid, @ModelAttribute("favourite") Favourite favourite, Model model) {
 
+        //get the fav id
+        int favid = favourite.getFavid();
+        //insert all data into favourite
+        favourite = new Favourite(favid, movieid, userid);
+        //assign to an entity
+        HttpEntity<Favourite> entity = new HttpEntity<Favourite>(favourite);
+        //save favourite
+        restTemplate.exchange("http://localhost:8086/savefavourite", HttpMethod.POST, entity, Favourite.class).getBody();
+
+        //get favourite using userid
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON)); //set as array
+        HttpEntity<Favourite> entityfav = new HttpEntity<Favourite>(headers);
+        //get using API
+        List<Favourite> favlist = restTemplate.exchange("http://localhost:8086/getfavsbyuser/" + userid, HttpMethod.GET, entityfav, new ParameterizedTypeReference<List<Favourite>>() {
+        }).getBody();
+        //System.out.println(favlist); //this works fine
+
+        //add movie details from favourited into fav movie list to display
+        HttpHeaders headersmovie = new HttpHeaders();
+        headersmovie.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+        HttpEntity<Movie> entitymovie = new HttpEntity<Movie>(headersmovie);
+        List<Movie> dataListmovie = new ArrayList<>();
+        //loop each movie in list to get by movie id
+        for (Favourite favouritemovie : favlist) {
+            int movieId = favouritemovie.getMovieid();
+            List<Movie> favMovies = restTemplate.exchange("http://localhost:8083/findallmoviesbyid/" + movieId, HttpMethod.GET, entitymovie, new ParameterizedTypeReference<List<Movie>>() {
+            }).getBody();
+            dataListmovie.addAll(favMovies);
+        }
+        model.addAttribute("datalistmovie", dataListmovie);
+
+        return "favourited";// redirect to favourite page
+    }
+
+    //view all favourited movies
+    @GetMapping("/viewfavourites")
+    public String viewallfavs(Model model, HttpSession session){
+        //get favourite data for current user
+        Integer userid = (Integer) session.getAttribute("userid");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+        HttpEntity<Favourite> entity = new HttpEntity<Favourite>(headers);
+        List<Favourite> favlist = restTemplate.exchange("http://localhost:8086/getfavsbyuser/" + userid, HttpMethod.GET, entity, new ParameterizedTypeReference<List<Favourite>>() {
+        }).getBody();
+
+        //add movie details from favourited into fav movie list to display
+        HttpHeaders headersmovie = new HttpHeaders();
+        headersmovie.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+        HttpEntity<Movie> entitymovie = new HttpEntity<Movie>(headersmovie);
+        List<Movie> dataListmovie = new ArrayList<>();
+        //loop each movie in list to get by movie id
+        for (Favourite favouritemovie : favlist) {
+            int movieId = favouritemovie.getMovieid();
+            List<Movie> favMovies = restTemplate.exchange("http://localhost:8083/findallmoviesbyid/" + movieId, HttpMethod.GET, entitymovie, new ParameterizedTypeReference<List<Movie>>() {
+            }).getBody();
+            dataListmovie.addAll(favMovies);
+        }
+        model.addAttribute("datalistmovie", dataListmovie);
+
+        return "favourited";// redirect to favourite page
+    }
 }
 

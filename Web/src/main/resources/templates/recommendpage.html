@@ -48,8 +48,9 @@
 <nav class="navbar navbar-expand-lg navbar-light">
   <a class="navbar-brand" href="#">Movie</a>
   <a class="nav-link logout-link" href="/logout">  Logout</a>
-  <a class="nav-link logout-link" href="/home">    Back</a>
+
 </nav>
+<a class="nav-link logout-link" href="/home">    Back</a>
 <!-- Jumbotron for selected Movie use dataList-->
 <div class="jumbotron text-center" id="jumbomain" style="background-size: cover;">
   <div th:each="movie : ${dataList}">
@@ -65,7 +66,7 @@
         Add to Favorites
       </button>
         <p>testing weird happenings</p>
-        <form action="/addrating" method="post">
+        <form action="/addmovierating" method="post">
         <div class="form-group">
           <label for="rating">Rating:</label>
           <select class="form-control" id="rating" name="rating">
@@ -139,14 +140,16 @@
                       <p class="lead">${movie.genres}</p>
                       <p class="card-text">${overview}</p>
                       <form action="/addfavourite" method="post">
+                      <input type="hidden" name="movieid" value="${movie.movieid}">
+                      <input type="hidden" name="userid" value="${userid}">
                       <hr class="my-4"><button type="submit" class="btn btn-primary" id="add-to-favorites">
                       Add to Favorites
                       </button>
                       </form><br>
-                      <form action="/addrating" method="post>
+                      <form action="/addmovierating" method="post">
                       <div class="rating">
-                        <!--<input type="text" name="movieId" value="${movie.movieid}">
-                        <input type="text" name="userId" value="${userid}">-->
+                        <input type="hidden" name="movieid" value="${movie.movieid}">
+                        <input type="hidden" name="userid" value="${userid}">
                         <label for="rate">Rating:</label><br>
                         <select class="form-control" id="rating" name="rating">
                           <option value="1">1</option>
@@ -156,9 +159,7 @@
                           <option value="5">5</option>
                         </select><br>
                       </div>
-                      <button type="submit" class="btn btn-primary" id="add-to-rating">
-                      submit rating
-                      </button>
+                      <button type="submit" class="btn btn-primary">Rate</button>
                       </form>
                     </div>
                   </div>`;
