@@ -23,13 +23,13 @@ public class RatingControl {
         return service.getRatingbyUserid(userid);
     }
     //get the list of Rating from specific movie
-    @GetMapping("/movieraters/{movieid}")
+    @GetMapping("/movieratings/{movieid}")
     public List<Rating> getMovieRating(@PathVariable int movieid){
         return service.getRatingbyMovieid(movieid);
     }
 
     //get the rating for specific user and movie
-    @GetMapping("/rated/{userid}/{movieid}")
+    @GetMapping("/findbyuseridandmovieid/{userid}/{movieid}")
     public Rating getRatingbyUseridandMovieid(@PathVariable("userid") int userid, @PathVariable("movieid") int movieid){
         return service.getRatingbyBothids(userid, movieid);
     }
