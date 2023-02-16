@@ -17,5 +17,15 @@ public class FavouriteControl {
         return service.saveFav(favourite);
     }
 
+    //get favourite list from specific user
+    @GetMapping("/getfavsbyuser/{userid}")
+    public List<Favourite> getfavbyUserid(@PathVariable int userid){
+        return service.getbyuserid(userid);
+    }
 
+    //delete a favourite by fav id
+    @DeleteMapping("/deletefav/{favid}")
+    public String deletefav(@PathVariable int favid){
+        return service.deletebyid(favid);
+    }
 }

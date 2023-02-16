@@ -15,5 +15,14 @@ public class FavouriteService {
         return repo.save(favourite);
     }
 
+    //get favourite by user id
+    public List<Favourite> getbyuserid(int userid){
+        return repo.findByUserid(userid);
+    }
 
+    //delete favourite by favid
+    public String deletebyid(int favid){
+        repo.deleteById(favid);
+        return "Favourite id "+favid+" successfully deleted.";
+    }
 }
